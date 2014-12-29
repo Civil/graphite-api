@@ -72,7 +72,10 @@ def safeDiv(a, b):
         return None
     if b in (0, None):
         return None
-    return float(a) / float(b)
+    res = float(a) / float(b)
+    if math.fabs(b) < 1e-6 and math.fabs(res) > 1e5:
+        return None
+    return res
 
 
 def safeMul(*factors):
