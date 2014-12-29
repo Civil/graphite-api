@@ -128,6 +128,10 @@ def configure(app):
     loaded_config['searcher'] = IndexSearcher(config['search_index'])
     app.config['GRAPHITE'] = loaded_config
     app.config['TIME_ZONE'] = config['time_zone']
+    try:
+        app.config['CACHE_TIMEOUT'] = config['cache_timeout']
+    except KeyError:
+        app.config['CACHE_TIMEOUT'] = 30
     logger.info("configured timezone", timezone=app.config['TIME_ZONE'])
 
     if 'sentry_dsn' in config:

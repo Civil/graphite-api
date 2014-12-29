@@ -351,6 +351,8 @@ def render():
     cache_timeout = RequestParams.get('cacheTimeout')
     if cache_timeout is not None:
         cache_timeout = int(cache_timeout)
+    else:
+        cache_timeout = app.config['CACHE_TIMEOUT']
 
     if errors:
         return jsonify({'errors': errors}, status=400, jsonp=RequestParams.get('jsonp', False))
