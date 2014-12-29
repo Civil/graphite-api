@@ -493,9 +493,12 @@ def evaluateTokens(requestContext, tokens):
         func = app.functions[tokens.call.funcname]
         args = [evaluateTokens(requestContext,
                                arg) for arg in tokens.call.args]
-        kwargs = dict([(kwarg.argname,
-                        evaluateTokens(requestContext, kwarg.args[0]))
-                       for kwarg in tokens.call.kwargs])
+        try:
+            kwargs = dict([(kwarg.argname,
+                            evaluateTokens(requestContext, kwarg.args[0]))
+                           for kwarg in tokens.call.kwargs])
+        except ValueError:
+            kwargs = dict()
         return func(requestContext, *args, **kwargs)
 
     elif tokens.number:
