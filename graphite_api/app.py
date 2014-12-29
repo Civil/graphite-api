@@ -6,12 +6,13 @@ import pytz
 import shutil
 import six
 import tempfile
+import traceback
 
 from collections import defaultdict
 from datetime import datetime
 from io import StringIO, BytesIO
 
-from flask import Flask
+from flask import Flask, Response
 from structlog import get_logger
 
 from .config import configure
@@ -79,6 +80,12 @@ def dashboard_find():
 def dashboard_load(name):
     return jsonify({'error': "Dashboard '{0}' does not exist.".format(name)},
                    status=404)
+
+
+@app.errorhandler(500)
+def display_error(error):
+    err = "<html><head><title>Error message</title></head><body><p><b><h3>%s</h3></b></p><p><pre>%s</pre></body></html>" % (str(error), str(traceback.format_exc()))
+    return Response(err, mimetype='text/html')
 
 
 @app.route('/events/get_data', methods=methods)
