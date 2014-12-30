@@ -88,6 +88,51 @@ def display_error(error):
     return Response(err, mimetype='text/html')
 
 
+@app.route('/graphlot/rawdata', methods=methods)
+def raw_data():
+    """
+    Deprecated
+    Get raw data for graphlot
+    """
+    tzinfo = pytz.timezone(app.config['TIME_ZONE'])
+    tz = RequestParams.get('tz')
+    errors = dict()
+    if tz:
+        try:
+            tzinfo = pytz.timezone(tz)
+        except pytz.UnknownTimeZoneError:
+            errors['tz'] = "Unknown timezone: '{0}'.".format(tz)
+
+    until_time = parseATTime(RequestParams.get('until', 'now'), tzinfo)
+    from_time = parseATTime(RequestParams.get('from', '-1d'), tzinfo)
+
+    start_time = min(from_time, until_time)
+    end_time = max(from_time, until_time)
+
+    try:
+        target = RequestParams.getlist('target')[0]
+        context = {
+            'startTime': start_time,
+            'endTime': end_time,
+            'localOnly': False,
+            'data': list()
+        }
+
+        series_list = evaluateTarget(context, target)
+        result = [dict(
+            name=timeseries.name,
+            data=[x for x in timeseries],
+            start=timeseries.start,
+            end=timeseries.end,
+            step=timeseries.step
+            ) for timeseries in series_list]
+    except IndexError:
+        result = None
+    if not result:
+        return "Metric not found", 404
+    return json.dumps(result), 200, {'Content-Type': 'application/json'}
+
+
 @app.route('/events/get_data', methods=methods)
 def events():
     return json.dumps([]), 200, {'Content-Type': 'application/json'}
