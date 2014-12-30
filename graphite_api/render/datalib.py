@@ -28,16 +28,56 @@ class TimeSeries(list):
         self.step = step
         self.consolidationFunc = consolidate
         self.valuesPerPoint = 1
+        self.pointsPerValue = 1
         self.options = {}
 
     def __iter__(self):
         if self.valuesPerPoint > 1:
             return self.__consolidatingGenerator(list.__iter__(self))
-        else:
-            return list.__iter__(self)
+        if self.pointsPerValue > 1:
+           return self.__approximatingGenerator(list.__iter__(self))
+        return list.__iter__(self)
+
+    def approximate(self, pointsPerValue):
+        self.pointsPerValue = int(pointsPerValue)
+        self.valuesPerPoint = 1
 
     def consolidate(self, valuesPerPoint):
         self.valuesPerPoint = int(valuesPerPoint)
+        self.pointsPerValue = 1
+
+    def __approximate(self, prev, current):
+         """
+         Performs linear approximation
+         :param prev:
+         :param current:
+         :param points:
+         :returns: list of approximated values
+         """
+         result = list()
+         if current is not None and prev is not None:
+             step = int((current - prev) / self.valuesPerPoint)
+         else:
+             step = None
+         result.append(prev)
+         for i in range(1, points - 1):
+             result.append(prev)
+             if step is not None:
+                 prev += step
+         result.append(current)
+         return result
+
+    def __approximatingGenerator(self, gen):
+        gen_empty = True
+        prev_value = None
+        for x in gen:
+            gen_empty = False
+            vals = self.__approximate(prev_value, x)
+            for v in vals:
+                yield v
+        if gen_empty:
+            yield None
+        raise StopIteration
 
     def __consolidatingGenerator(self, gen):
         buf = []
