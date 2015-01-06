@@ -16,9 +16,11 @@
 
 from six.moves import zip, zip_longest, reduce
 from operator import itemgetter
+from itertools import repeat
 
 from .render.datalib import TimeSeries
-from .functions import formatPathExpressions, normalize, lcm, safeSum, safeDiv, movingMedian, movingAverage, safeAvg, safeLen
+from .functions import formatPathExpressions, normalize, lcm, safeSum, safeDiv, safeAvg, safeLen, safeMul,\
+    movingMedian, movingAverage
 
 NAN = float('NaN')
 INF = float('inf')
