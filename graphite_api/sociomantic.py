@@ -16,10 +16,9 @@
 
 from six.moves import zip, zip_longest, reduce
 from operator import itemgetter
-from itertools import repeat
 
 from .render.datalib import TimeSeries
-from .functions import formatPathExpressions, normalize, lcm, safeSum, safeDiv, safeAvg, safeLen, safeMul,\
+from .functions import formatPathExpressions, lcm, safeSum, safeDiv, safeAvg, safeLen, safeMul,\
     movingMedian, movingAverage
 
 NAN = float('NaN')
@@ -29,15 +28,31 @@ HOUR = MINUTE * 60
 DAY = HOUR * 24
 
 
-def normalizeApproximate(seriesLists):
-    seriesList = reduce(lambda L1, L2: L1+L2, seriesLists)
-    step = reduce(lcm, [s.step for s in seriesList])
-    for s in seriesList:
-         s.approximate(s.step // step)
-    start = min([s.start for s in seriesList])
-    end = max([s.end for s in seriesList])
+def normalize(seriesLists, approximate=False):
+    step = seriesLists[0].step
+    min_step = step
+    start = seriesLists[0].start
+    end = seriesLists[0].end
+    for s in seriesLists:
+        if step != s.step:
+            step = lcm(step, s.step)
+            if step > s.step:
+                min_step = s.step
+        if start > s.start:
+            start = s.start
+        if end < s.end:
+            end = s.end
+#    seriesList = reduce(lambda L1, L2: L1+L2, seriesLists)
+#    step = reduce(lcm, [s.step for s in seriesList])
+    if step != min_step:
+        if not approximate:
+            for s in seriesLists:
+                s.consolidate(step // s.step)
+        else:
+            for s in seriesLists:
+                s.approximate(s.step // step)
     end -= (end - start) % step
-    return seriesList, start, end, step
+    return seriesLists, start, end, step
 
 
 def safeNoneSum(values):
@@ -45,6 +60,12 @@ def safeNoneSum(values):
         if v is None:
             return None
     return sum(values)
+
+
+def repeat(object, times):
+    # repeat(10, 3) --> 10 10 10
+    for i in range(times):
+        yield object
 
 
 def divideSeries(requestContext, dividendSeriesList, divisorSeriesList):
@@ -116,7 +137,7 @@ def asPercent(requestContext, seriesList, total=None):
     """
     if not seriesList:
         return []
-    normalizeApproximate([seriesList])
+    normalize([seriesList], True)
 
     if total is None:
         totalValuesList = repeat([safeSum(row) for row in zip_longest(*seriesList)], len(seriesList))
@@ -131,7 +152,7 @@ def asPercent(requestContext, seriesList, total=None):
             raise ValueError(
                 "asPercent arguments must have the same length (%s != %s)" %
                 (len(seriesList), len(total)))
-        normalizeApproximate([seriesList, total])
+        normalize([seriesList, total], True)
         totalValuesList = total
         totalTextList = ( t.name for t in totalValuesList )
 
@@ -286,29 +307,6 @@ def mostDeviant(requestContext, seriesList, n):
                                              reverse=True)][:realN]
 
 
-def fastNormalize(seriesLists):
-    step = seriesLists[0].step
-    min_step = step
-    start = seriesLists[0].start
-    end = seriesLists[0].end
-    for s in seriesLists:
-        if step != s.step:
-            step = lcm(step, s.step)
-            if step > s.step:
-                min_step = s.step
-        if start > s.start:
-            start = s.start
-        if end < s.end:
-            end = s.end
-#    seriesList = reduce(lambda L1, L2: L1+L2, seriesLists)
-#    step = reduce(lcm, [s.step for s in seriesList])
-    if step != min_step:
-        for s in seriesLists:
-            s.consolidate(step // s.step)
-    end -= (end - start) % step
-    return seriesLists, start, end, step
-
-
 def safeSumFast(seriesLists):
     l2 = range(len(seriesLists))
     result = list()
@@ -345,8 +343,8 @@ def sumSeriesFast(requestContext, *seriesLists):
     """
     if not seriesLists or seriesLists == ([],):
         return []
-    seriesList, start, end, step = fastNormalize(seriesLists[0])
-    name = "sumSeriesFast(%s)" % formatPathExpressions(seriesList)
+    seriesList, start, end, step = normalize(seriesLists[0])
+    name = "sumSeries(%s)" % formatPathExpressions(seriesList)
     values = safeSumFast(seriesList)
     series = TimeSeries(name, start, end, step, values)
     series.pathExpression = name
@@ -363,5 +361,6 @@ SociomanticSeriesFunctions = {
     'movingMedian': movingMedianOld,
     'sumSeriesWithoutNone': sumSeriesWithoutNone,
     'sumWithoutNone': sumSeriesWithoutNone,
-    'sumSeriesFast' : sumSeriesFast,
+    'sumSeries' : sumSeriesFast,
+    'sum' : sumSeriesFast,
 }
