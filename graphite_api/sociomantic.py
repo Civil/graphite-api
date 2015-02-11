@@ -359,6 +359,7 @@ SociomanticSeriesFunctions = {
     'movingMedianNew': movingMedian,
     'movingAverage': movingAverageOld,
     'movingMedian': movingMedianOld,
+    'mostDeviant' : mostDeviant,
     'sumSeriesWithoutNone': sumSeriesWithoutNone,
     'sumWithoutNone': sumSeriesWithoutNone,
     'sumSeries' : sumSeriesFast,
