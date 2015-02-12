@@ -1250,7 +1250,9 @@ class LineGraph(Graph):
             numberOfDataPoints = self.timeRange / series.step
             minXStep = float(self.params.get('minXStep', 1.0))
             divisor = self.timeRange / series.step
-            bestXStep = numberOfPixels / divisor
+            bestXStep = 1
+            if divisor > 0:
+                bestXStep = numberOfPixels / divisor
             if bestXStep < minXStep:
                 drawableDataPoints = int(numberOfPixels / minXStep)
                 pointsPerPixel = math.ceil(
