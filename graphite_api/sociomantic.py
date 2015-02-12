@@ -62,6 +62,20 @@ def safeNoneSum(values):
     return sum(values)
 
 
+def safeMax(values):
+    if values:
+        return max(values)
+    else:
+        return 0
+
+
+def safeMin(values):
+    if values:
+        return min(values)
+    else:
+        return 0
+
+
 def repeat(object, times):
     # repeat(10, 3) --> 10 10 10
     for i in range(times):
@@ -351,6 +365,25 @@ def sumSeriesFast(requestContext, *seriesLists):
     return [series]
 
 
+def highestMax(requestContext, seriesList, n=1):
+    """
+    Takes one metric or a wildcard seriesList followed by an integer N.
+
+    Out of all metrics passed, draws only the N metrics with the highest
+    maximum value in the time period specified.
+
+    Example::
+
+        &target=highestMax(server*.instance*.threads.busy,5)
+
+    Draws the top 5 servers who have had the most busy threads during the time
+    period specified.
+
+    """
+    result_list = sorted(seriesList, key=lambda s: safeMax(s))[-n:]
+    return sorted(result_list, key=lambda s: safeMax(s), reverse=True)
+
+
 SociomanticSeriesFunctions = {
     # Combine functions
     'divideSeries': divideSeries,
@@ -364,4 +397,5 @@ SociomanticSeriesFunctions = {
     'sumWithoutNone': sumSeriesWithoutNone,
     'sumSeries' : sumSeriesFast,
     'sum' : sumSeriesFast,
+    'highestMax' : highestMax,
 }
