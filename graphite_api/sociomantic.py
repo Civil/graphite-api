@@ -327,11 +327,13 @@ def safeSumFast(seriesLists):
     for cnt2 in l2:
         cnt = 0
         for val in seriesLists[cnt2]:
-            if val is not None:
-                try:
-                    result[cnt] += val
-                except IndexError:
-                    result.append(val)
+            try:
+                result[cnt] += val
+            except IndexError:
+                result.append(val)
+            except TypeError:
+                if val:
+                    result[cnt] = val
             cnt += 1
     return result
         
