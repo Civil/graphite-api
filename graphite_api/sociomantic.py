@@ -151,7 +151,10 @@ def asPercent(requestContext, seriesList, total=None):
     """
     if not seriesList:
         return []
-    normalize([seriesList], True)
+    if isinstance(seriesList, list):
+        normalize(seriesList, True)
+    else:
+        normalize([seriesList], True)
 
     if total is None:
         totalValuesList = repeat([safeSum(row) for row in zip_longest(*seriesList)], len(seriesList))
@@ -166,7 +169,7 @@ def asPercent(requestContext, seriesList, total=None):
             raise ValueError(
                 "asPercent arguments must have the same length (%s != %s)" %
                 (len(seriesList), len(total)))
-        normalize([seriesList, total], True)
+        normalize(total, True)
         totalValuesList = total
         totalTextList = ( t.name for t in totalValuesList )
 
@@ -359,7 +362,7 @@ def sumSeriesFast(requestContext, *seriesLists):
     """
     if not seriesLists or seriesLists == ([],):
         return []
-    seriesList, start, end, step = normalize(seriesLists[0])
+    seriesList, start, end, step = normalize(seriesLists[0], True)
     name = "sumSeries(%s)" % formatPathExpressions(seriesList)
     values = safeSumFast(seriesList)
     series = TimeSeries(name, start, end, step, values)
